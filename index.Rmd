@@ -1,0 +1,137 @@
+---
+title: "Practical Machine Learning Project"
+author: "Cutberto Paredes"
+date: "April 28, 2016"
+output: 
+    html_document:
+        toc: true
+        toc_float: true
+        number_sections: true
+        theme: flatly
+        highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+# Executive Summary {.tabset}
+
+In this project, a random forests model is trained to predict the manner in which an activity is performed by assigning a class to it. The results suggest that the model is highly accurate as shown in the testing and validation sections.
+
+# Data Pre-processing {.tabset}
+
+The dataset for this project comes from [1]. The following R code assumes that both training and testing datasets are in the working directory. After loading both datasets, the columns that are all NAs in the testing dataset are discarded from both datasets. 
+
+```{r preprocess1}
+# Load libraries
+library(caret)
+library(randomForest)
+library(parallel)
+library(doParallel)
+
+# Load datasets
+pmltrain <- read.csv('pml-training.csv')
+pmltest <- read.csv('pml-testing.csv')
+
+## Discard columns that are NA in test and train
+sumNA <- colSums(is.na(pmltest))
+discard <- which(sumNA == 20)
+pmltrain <- pmltrain[,-discard]
+pmltest <- pmltest[,-discard]
+```
+
+After removing empty columns, the first column was removed from both datasets. This column was the row number (or index for each record), which shouldn't be included during the training of the algorithm.
+
+```{r preprocess2}
+# Remove index
+pmltest <- pmltest[,-1]
+pmltrain <- pmltrain[,-1]
+```
+
+Once that both datasets were cleaned, the column type was matched in both datasets using the training dataset as reference.
+
+```{r preprocess3}
+# Match train and test types
+colclasses <- unname(sapply(pmltrain, class))
+i = 1
+for(c in colclasses){
+    pmltest[,i] <- eval(parse(text = paste0('as.',c,'(pmltest[,',i,'])')))
+    i = i + 1
+}
+```
+
+Finally, the training dataset was split in two sets for training and testing the algorithm. The original testing set was interpreted as the validation dataset afterwards. The column classe was added to the validation set in order to predict later in the project.
+
+```{r preprocess4}
+# Split pmltrain in training and testing
+set.seed(10008000)
+inTrain <- createDataPartition(y = pmltrain$classe, p = 0.75, list = FALSE)
+training <- pmltrain[inTrain, ]
+testing <- pmltrain[-inTrain, ]
+
+# Remove test's last column and add classe, pmltest is now validation
+pmltest <- pmltest[,-ncol(pmltest)]
+pmltest$classe <- pmltrain$classe[1:nrow(pmltest)]
+```
+
+# Model Training
+
+The first algorithm that was tested was random forests (RF) trained with 10-fold cross validation. No further models were trained since this algorithm yielded highly accurate results as shown in the following sections. The code below implements parallelization as suggested in [2].
+
+```{r train}
+# Set up parallel environment, leave 2 cores free for other tasks
+cluster <- makeCluster(detectCores() - 2) 
+registerDoParallel(cluster)
+
+# Configure trainControl
+fitControl <- trainControl(method = 'cv', number = 10, allowParallel = TRUE)
+
+# Train model
+set.seed(10008000)
+modRF <- train(classe ~ ., data = training, method = 'rf', trControl = fitControl)
+
+# De-register parallel processing
+stopCluster(cluster)
+```
+
+# Model Testing
+
+The model trained above was tested against the folds of the cross validation. An in sample accuracy of 0.9993 was achieved in this first attempt.
+
+```{r tescv}
+# Predict on model cv
+confusionMatrix(modRF)
+```
+
+In order to estimate out of sample accuracy, the model was compared against the testing data set. An accuracy of 0.9995 was achieved against the testing dataset. Therefore, it was decided to compare against the validation dataset since a similar out of sample accuracy is expected.
+
+```{r test}
+# Predict on testing 
+predRFt <- predict(modRF, testing)
+confusionMatrix(predRFt, testing$classe)
+```
+
+# Model Validation
+
+The model trained above was used to predict the 20 cases in the validation dataset. The values below were validated with an accuracy of 1.0000 when submitted, confirming the validity of the model.
+
+```{r validate}
+# Predict on pmltest
+predRFv <- predict(modRF, pmltest)
+data.frame(Problem = 1:20, Classe = predRFv)
+```
+
+# References {.tabset}
+
+[1] Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. **Qualitative Activity Recognition of Weight Lifting Exercises**. *Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13)*. Stuttgart, Germany: ACM SIGCHI, 2013. Available at  <http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf>
+
+[2] Greski, Leonard. **Improving Performance of Random Forest in caret::train()**. Available at  <https://github.com/lgreski/datasciencectacontent/blob/master/markdown/pml-randomForestPerformance.md>
+
+# Apendix A - Software used
+
+```{r sessioninfo}
+sessionInfo()
+```
+
