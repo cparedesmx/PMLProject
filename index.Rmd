@@ -115,9 +115,9 @@ confusionMatrix(predRFt, testing$classe)
 
 # Model Validation
 
-The model trained above was used to predict the 20 cases in the validation dataset. The values below were validated with an accuracy of 1.0000 when submitted, confirming the validity of the model.
+The model trained above was used to predict the 20 cases in the validation dataset. The values below were validated with an accuracy of 1.0000 when submitted, confirming the validity of the model. NOTE: Results not show in order to comply with the rules of coursera.
 
-```{r validate}
+```{r validate, echo=FALSE, eval=FALSE}
 # Predict on pmltest
 predRFv <- predict(modRF, pmltest)
 data.frame(Problem = 1:20, Classe = predRFv)

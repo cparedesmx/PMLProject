@@ -362,31 +362,7 @@ predRFt &lt;-<span class="st"> </span><span class="kw">predict</span>(modRF, tes
 </div>
 <div id="model-validation" class="section level1">
 <h1><span class="header-section-number">5</span> Model Validation</h1>
-<p>The model trained above was used to predict the 20 cases in the validation dataset. The values below were validated with an accuracy of 1.0000 when submitted, confirming the validity of the model.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Predict on pmltest</span>
-predRFv &lt;-<span class="st"> </span><span class="kw">predict</span>(modRF, pmltest)
-<span class="kw">data.frame</span>(<span class="dt">Problem =</span> <span class="dv">1</span>:<span class="dv">20</span>, <span class="dt">Classe =</span> predRFv)</code></pre></div>
-<pre><code>##    Problem Classe
-## 1        1      B
-## 2        2      A
-## 3        3      B
-## 4        4      A
-## 5        5      A
-## 6        6      E
-## 7        7      D
-## 8        8      B
-## 9        9      A
-## 10      10      A
-## 11      11      B
-## 12      12      C
-## 13      13      B
-## 14      14      A
-## 15      15      E
-## 16      16      E
-## 17      17      A
-## 18      18      B
-## 19      19      B
-## 20      20      B</code></pre>
+<p>The model trained above was used to predict the 20 cases in the validation dataset. The values below were validated with an accuracy of 1.0000 when submitted, confirming the validity of the model. NOTE: Results not show in order to comply with the rules of coursera.</p>
 </div>
 <div id="references" class="section level1 tabset">
 <h1><span class="header-section-number">6</span> References</h1>
